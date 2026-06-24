@@ -1,4 +1,4 @@
 [core]
-    remote = storage
-['remote "storage"']
-    url = /content/drive/MyDrive/dvc_remote_storage
+    remote = localstorage
+['remote "localstorage"']
+    url = ../../recommendation-system-storage

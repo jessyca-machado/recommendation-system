@@ -1,3 +1,4 @@
 /events.csv
 .dvc/cache/
 data/raw/*.csv
+.dvc/config.local

@@ -1,0 +1,89 @@
+[project]
+name = "recommendation_system"
+version = "0.1.0"
+description = "Projeto de ML para sistema de recomendação de produtos"
+authors=[
+    {name = "Jessyca Machado", email = "jessycamachado0@gmail.com"}
+]
+readme = "README.md"
+requires-python = "~=3.12.0"
+dependencies = [
+    "mlflow>=2.8,<3.0",
+    "scikit-learn>=1.2,<2.0",
+    "fastapi>=0.111",
+    "uvicorn>=0.23",
+    "pandas>=2.2",
+    "numpy>=2.0",
+    "plotly>=6.6.0",
+    "python-json-logger>=4.1.0",
+    # Persistência / serialização segura
+    "joblib>=1.3",
+    "skops>=0.11",
+    # Security patches (Dependabot alerts)
+    "rich>=15.0.0",
+    "scikit-posthocs>=0.12.0",
+    "scipy>=1.17.1",
+    "prometheus-client>=0.25.0",
+    "sqlalchemy>=2.0.48",
+    "slowapi>=0.1.9",
+    "redis>=7.4.0",
+    "psycopg[binary]>=3.1",
+    "pyyaml>=6.0.3",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29",
+    "nbformat>=4.2.0",
+    "ruff>=0.12.10",
+    "pre-commit>=4.3.0",
+    "pytest>=9.0.3",
+    "httpx>=0.28.1",
+    "dvc[s3]>=3.67.1",
+]
+
+deep = [
+    "torch==2.11.0",
+    "skorch>=1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "integration: testes E2E/integracao",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:mlflow\\..*",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = [
+    "mlruns",
+    "tests/mlruns",
+    ".venv",
+    ".pytest_cache",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

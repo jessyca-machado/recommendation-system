@@ -1,6 +1,10 @@
+"""Prepara os datasets de treino e teste a partir do dataset Retail Rocket.
+
+Uso:
+    python src/prepare.py
+"""
 import logging
 import pandas as pd
-from pathlib import Path
 
 from config import RAW_DATA_PATH, TRAIN_PATH, TEST_PATH
 
@@ -25,6 +29,13 @@ def split_train_test(
     df: pd.DataFrame,
     test_size: float = 0.2
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Divide o dataset em treino e teste com base na coluna de timestamp.
+
+    Returns:
+        train: DataFrame com os dados de treino
+        test: DataFrame com os dados de teste
+    """
     df = df.copy()
 
     df['datetime'] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
@@ -41,11 +52,24 @@ def save_datasets(
     train: pd.DataFrame,
     test: pd.DataFrame,
 ) -> None:
+    """
+    Salva os datasets de treino e teste em arquivos parquet.
+
+    Returns:
+        None
+    """
     train.to_parquet(TRAIN_PATH)
     test.to_parquet(TEST_PATH)
 
 
 def load_train_test() -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Carrega os datasets de treino e teste a partir dos arquivos parquet.
+
+    Returns:
+        train: DataFrame com os dados de treino
+        test: DataFrame com os dados de teste
+    """
     train = pd.read_parquet(TRAIN_PATH)
     test = pd.read_parquet(TEST_PATH)
 

@@ -9,18 +9,17 @@ stages:
       size: 94237913
     - path: src/prepare.py
       hash: md5
-      md5: 3b7aac9dabb8246656d73d6a4f4cb0f8
-      size: 406
+      md5: 8c85a251da6cae3d909f9ed0190293a5
+      size: 1483
     params:
       params.yaml:
-        prepare.random_state: 42
         prepare.test_size: 0.2
     outs:
-    - path: data/processed/test.csv
+    - path: data/processed/test.parquet
       hash: md5
-      md5: baf53b68b0dba7d76a8e1375db0ba73d
-      size: 37046185
-    - path: data/processed/train.csv
+      md5: 22a02c4de510409ad7e2c6e36f899f2f
+      size: 14364350
+    - path: data/processed/train.parquet
       hash: md5
-      md5: 762036ed6fcb9fe006321246273579cc
-      size: 148168181
+      md5: 596bb6b5a57ccafce0fcb9f83b88e786
+      size: 56641939

@@ -9,25 +9,21 @@ stages:
       - src/prepare.py
       - data/raw/events.csv
     params:
-      - params.yaml:
-        - prepare.test_size
-        - prepare.random_state
+      - prepare.test_size
     outs:
-      - data/processed/train.csv
-      - data/processed/test.csv
+      - data/processed/train.parquet
+      - data/processed/test.parquet
 
   train:
     cmd: python src/train.py
     deps:
       - src/train.py
-      - data/processed/train.csv
+      - data/processed/train.parquet
     params:
-      - params.yaml:
-        - train.n_estimators
-        - train.max_depth
-        - train.random_state
+      - train.model_type
+      - train.top_k
     outs:
-      - models/model.pkl
+      - models/model.joblib
     metrics:
       - metrics/train_metrics.json:
           cache: false
@@ -36,11 +32,8 @@ stages:
     cmd: python src/evaluate.py
     deps:
       - src/evaluate.py
-      - models/model.pkl
-      - data/processed/test.csv
+      - models/model.joblib
+      - data/processed/test.parquet
     metrics:
       - metrics/eval_metrics.json:
-          cache: false
-    plots:
-      - metrics/confusion_matrix.csv:
           cache: false

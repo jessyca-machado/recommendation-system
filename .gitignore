@@ -1,5 +1,7 @@
 .dvc/cache/
 data/raw/*.csv
 .dvc/config.local
-data/processed/*.csv
+data/processed/*.parquet
 .dvc/tmp/
+__pycache__/
+*.pyc

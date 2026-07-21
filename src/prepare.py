@@ -6,7 +6,7 @@ Uso:
 import logging
 import pandas as pd
 
-from config import RAW_DATA_PATH, TRAIN_PATH, TEST_PATH
+from src.config import RAW_DATA_PATH, TRAIN_PATH, TEST_PATH
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -45,6 +45,17 @@ def split_train_test(
     train = df[df["datetime"] < cutoff]
     test = df[df["datetime"] >= cutoff]
 
+    train_users = set(train["visitorid"])
+    train_items = set(train["itemid"])
+
+    test = test[
+        test["visitorid"].isin(train_users)
+    ]
+
+    test = test[
+        test["itemid"].isin(train_items)
+    ]
+
     return train, test
 
 
@@ -79,10 +90,66 @@ def load_train_test() -> tuple[pd.DataFrame, pd.DataFrame]:
     return train, test
 
 
+def build_mappings(df):
+
+    user_ids = df["visitorid"].unique()
+    item_ids = df["itemid"].unique()
+
+    user2idx = {u: i for i, u in enumerate(user_ids)}
+    item2idx = {i: j for j, i in enumerate(item_ids)}
+
+    df = df.copy()
+
+    df["user_idx"] = df["visitorid"].map(user2idx)
+    df["item_idx"] = df["itemid"].map(item2idx)
+
+    return df, user2idx, item2idx
+
+
+def apply_mappings(
+    df,
+    user2idx,
+    item2idx
+):
+
+    df = df.copy()
+
+    df["user_idx"] = df["visitorid"].map(user2idx)
+    df["item_idx"] = df["itemid"].map(item2idx)
+
+    before = len(df)
+
+    df = df.dropna(
+        subset=[
+            "user_idx",
+            "item_idx",
+        ]
+    )
+
+    after = len(df)
+
+    logger.info(
+        "Removed %s interactions with unseen users/items",
+        before - after,
+    )
+
+    df["user_idx"] = df["user_idx"].astype(int)
+    df["item_idx"] = df["item_idx"].astype(int)
+
+    return df
+
+
 if __name__ == "__main__":
     df = load_data()
 
     train, test = split_train_test(df)
+
+    train, user2idx, item2idx = build_mappings(train)
+    test = apply_mappings(
+        test,
+        user2idx,
+        item2idx
+    )
 
     save_datasets(
         train=train,

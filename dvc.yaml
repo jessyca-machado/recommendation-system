@@ -14,6 +14,15 @@ stages:
       - data/processed/train.parquet
       - data/processed/test.parquet
 
+  experiments:
+    cmd: python src/experiments/run_all.py
+    deps:
+      - src/experiments/
+      - data/processed/train.parquet
+      - data/processed/test.parquet
+    outs:
+      - metrics/experiment_results.json
+
   train:
     cmd: python src/train.py
     deps:

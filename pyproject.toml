@@ -29,6 +29,7 @@ dependencies = [
     "redis>=7.4.0",
     "psycopg[binary]>=3.1",
     "pyyaml>=6.0.3",
+    "implicit>=0.7.3",
 ]
 
 [dependency-groups]

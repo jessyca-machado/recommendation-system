@@ -1,8 +1,0 @@
-{
-  "model": "popularity",
-  "hit_rate@k": 0.5400408928267166,
-  "precision@k": 0.054004089282671655,
-  "ndcg@k": 0.32249130063875386,
-  "mrr@k": 0.2559265862873803,
-  "train_time_seconds": 0.05
-}

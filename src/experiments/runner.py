@@ -6,18 +6,26 @@ import time
 from rich.console import Console
 from rich.table import Table
 
-from registry import MODEL_REGISTRY
 from src.experiments.evaluator import evaluate_model_ncf
 
 logger = logging.getLogger("runner")
 console = Console()
 
 
-def run_experiments(train_df, train_matrix, test, k=10, n_items=None, num_eval_negatives=99):
+def run_experiments(
+    train_df,
+    train_matrix,
+    test,
+    models,
+    k=10,
+    n_items=None,
+    num_eval_negatives=99,
+    random_seed=42,
+):
 
     results = []
 
-    total_models = len(MODEL_REGISTRY)
+    total_models = len(models)
 
     logger.info(
         "Starting %s experiments",
@@ -25,7 +33,7 @@ def run_experiments(train_df, train_matrix, test, k=10, n_items=None, num_eval_n
     )
 
     for idx, (name, cfg) in enumerate(
-        MODEL_REGISTRY.items(),
+        models.items(),
         start=1,
     ):
 
@@ -36,10 +44,9 @@ def run_experiments(train_df, train_matrix, test, k=10, n_items=None, num_eval_n
             name,
         )
 
-        ModelClass = cfg["model"]
         input_type = cfg["input"]
 
-        model = ModelClass()
+        model = cfg["model"]
 
         start_time = time.perf_counter()
 
@@ -77,7 +84,7 @@ def run_experiments(train_df, train_matrix, test, k=10, n_items=None, num_eval_n
             n_items=n_items,
             k=k,
             num_eval_negatives=num_eval_negatives,
-            seed=42,
+            seed=random_seed,
         )
 
         logger.info(

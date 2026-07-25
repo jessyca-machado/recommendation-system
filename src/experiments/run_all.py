@@ -5,29 +5,28 @@ MLflow e promove a melhor (por NDCG) a produção no Model Registry.
 Uso:
     python src/experiments/run_all.py
 """
-import os
+from src.config.settings import configure_runtime, settings
 
-os.environ["OPENBLAS_NUM_THREADS"] = "1"
+configure_runtime(settings)
 
 import json
 import logging
 
 import mlflow
-from mlflow import MlflowClient
-
 from rich.console import Console
 from rich.logging import RichHandler
-
 from scipy.sparse import csr_matrix
 
-from runner import run_experiments
+from src.experiments.runner import run_experiments
+from src.config.params import load_params
+from src.models.factory import build_models
 from src.prepare import (
+    apply_mappings,
     build_mappings,
     load_data,
     load_train_test,
     save_datasets,
     split_train_test,
-    apply_mappings,
 )
 
 console = Console()
@@ -50,11 +49,25 @@ logger = logging.getLogger("experiments")
 
 def main():
 
-    mlflow.set_tracking_uri("http://localhost:5000")
-    mlflow.set_experiment("recommendation-system")
-    client = MlflowClient()
+    params = load_params()
+
+    models = build_models(
+        params["models"]
+    )
+
+    mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
+    mlflow.set_experiment(settings.mlflow_experiment_name)
 
     with mlflow.start_run(run_name="experiment_runner"):
+
+        mlflow.log_params(
+            {
+                "tracking_uri": settings.mlflow_tracking_uri,
+                "experiment": settings.mlflow_experiment_name,
+                **params["experiment"],
+                **params["weights"],
+            }
+        )
 
         logger.info("Loading dataset...")
         df = load_data()
@@ -85,13 +98,7 @@ def main():
         logger.info("Reloading datasets...")
         train, test = load_train_test()
 
-        train["weight"] = train["event"].map(
-            {
-                "view": 1,
-                "addtocart": 3,
-                "transaction": 5,
-            }
-        )
+        train["weight"] = train["event"].map(params["weights"])
 
         logger.info("Creating sparse interaction matrix...")
 
@@ -116,9 +123,14 @@ def main():
             type(train_matrix).__name__,
         )
 
-        mlflow.log_param("matrix_rows", train_matrix.shape[0],)
-
-        mlflow.log_param("matrix_cols", train_matrix.shape[1],)
+        mlflow.log_params(
+            {
+                "matrix_rows": train_matrix.shape[0],
+                "matrix_cols": train_matrix.shape[1],
+                "num_users": len(user2idx),
+                "num_items": len(item2idx),
+            }
+        )
 
         logger.info("Running experiments...")
 
@@ -126,9 +138,11 @@ def main():
             train_df=train,
             train_matrix=train_matrix,
             test=test,
-            k=10,
+            models=models,
+            k=params["experiment"]["top_k"],
             n_items=len(item2idx),
-            num_eval_negatives=99,
+            num_eval_negatives=params["experiment"]["num_eval_negatives"],
+            random_seed=params["experiment"]["random_seed"],
         )
 
         logger.info("Finished %s experiments", len(results))
@@ -137,15 +151,25 @@ def main():
 
         logger.info("Saving metrics...")
 
-        os.makedirs("metrics", exist_ok=True)
-        os.makedirs("models", exist_ok=True)
+        settings.metrics_dir.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
 
-        with open("metrics/experiment_results.json", "w") as f:
+        settings.models_dir.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        metrics_file = (
+            settings.metrics_dir
+            / "experiment_results.json"
+        )
+
+        with metrics_file.open("w") as f:
             json.dump(results, f, indent=2)
 
-        mlflow.log_artifact(
-            "metrics/experiment_results.json"
-        )
+        mlflow.log_artifact(str(metrics_file))
 
         logger.info("Selecting best model...")
 
@@ -175,10 +199,15 @@ def main():
 
         logger.info("Saving best model metadata...")
 
-        with open("models/best_model.json", "w") as f:
+        best_model_file = (
+            settings.models_dir
+            / "best_model.json"
+        )
+
+        with best_model_file.open("w") as f:
             json.dump(best_model, f, indent=2)
 
-        mlflow.log_artifact("models/best_model.json")
+        mlflow.log_artifact(str(best_model_file))
 
         logger.info("Pipeline finished successfully ✅")
 

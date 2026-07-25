@@ -6,7 +6,7 @@ Uso:
 import logging
 import pandas as pd
 
-from src.config import RAW_DATA_PATH, TRAIN_PATH, TEST_PATH
+from src.config.settings import settings
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ def load_data() -> pd.DataFrame:
     Returns:
         DataFrame com os dados do dataset
     """
-    df = pd.read_csv(RAW_DATA_PATH)
+    df = pd.read_csv(settings.raw_events_path)
 
     logger.info("Dataset carregado: %d linhas", len(df))
 
@@ -69,8 +69,21 @@ def save_datasets(
     Returns:
         None
     """
-    train.to_parquet(TRAIN_PATH)
-    test.to_parquet(TEST_PATH)
+    settings.processed_data_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    train.to_parquet(
+        settings.train_path,
+        index=False,
+    )
+
+    test.to_parquet(
+        settings.test_path,
+        index=False,
+    )
+
 
 
 def load_train_test() -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -81,8 +94,13 @@ def load_train_test() -> tuple[pd.DataFrame, pd.DataFrame]:
         train: DataFrame com os dados de treino
         test: DataFrame com os dados de teste
     """
-    train = pd.read_parquet(TRAIN_PATH)
-    test = pd.read_parquet(TEST_PATH)
+    train = pd.read_parquet(
+        settings.train_path,
+    )
+
+    test = pd.read_parquet(
+        settings.test_path,
+    )
 
     logger.info("Dataset carregado: %d linhas", len(train))
     logger.info("Dataset carregado: %d linhas", len(test))

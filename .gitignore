@@ -5,3 +5,7 @@ data/processed/*.parquet
 .dvc/tmp/
 __pycache__/
 *.pyc
+.env
+
+# Experiments outputs
+artifacts/

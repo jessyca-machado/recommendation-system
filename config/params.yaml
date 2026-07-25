@@ -1,0 +1,44 @@
+experiment:
+  random_seed: 42
+  top_k: 10
+  num_eval_negatives: 99
+
+weights:
+  view: 1
+  addtocart: 3
+  transaction: 5
+
+models:
+  popularity:
+    enabled: true
+
+  als:
+    enabled: true
+    factors: 64
+    iterations: 20
+    regularization: 0.01
+
+  bpr:
+    enabled: true
+    factors: 64
+    learning_rate: 0.01
+    regularization: 0.01
+    iterations: 50
+    random_state: 42
+
+  knn:
+    enabled: true
+    k_neighbors: 50
+    precompute_neighbors: true
+    max_user_history: 100
+
+  mlp:
+    enabled: true
+    emb_dim: 16
+    lr: 0.001
+    epochs: 25
+    batch_size: 2048
+    negative_ratio: 1
+    patience: 5
+    dropout: 0.2
+    seed: 42

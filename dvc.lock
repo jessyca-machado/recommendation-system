@@ -9,8 +9,8 @@ stages:
       size: 94237913
     - path: src/prepare.py
       hash: md5
-      md5: f6ea9576772a318bed0545e71e9c0ac6
-      size: 3394
+      md5: a3a6f5dee55b1c8c846b40611d2d55ad
+      size: 3335
     params:
       params.yaml:
         prepare.test_size: 0.2

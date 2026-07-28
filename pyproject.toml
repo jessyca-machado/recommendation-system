@@ -35,6 +35,7 @@ dependencies = [
 ]
 
 [project.scripts]
+validate-env = "scripts.validate_env:main"
 prepare = "src.prepare:main"
 train = "src.experiments.run_all:main"
 # evaluate = "src.evaluate:main"

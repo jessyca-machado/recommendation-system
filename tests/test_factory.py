@@ -1,11 +1,10 @@
 from src.config.params import load_params
-from src.models.factory import build_models
-
-from src.models.popularity import PopularityRecommender
 from src.models.als import ALSRecommender
 from src.models.bpr import BPRRecommender
+from src.models.factory import build_models
 from src.models.knn import KNNRecommender
 from src.models.mlp import MLPRecommender
+from src.models.popularity import PopularityRecommender
 
 
 def test_build_models():
@@ -15,9 +14,7 @@ def test_build_models():
 
     params = load_params()
 
-    models = build_models(
-        params["models"]
-    )
+    models = build_models(params["models"])
 
     assert set(models.keys()) == {
         "popularity",
@@ -35,9 +32,7 @@ def test_models_instances():
 
     params = load_params()
 
-    models = build_models(
-        params["models"]
-    )
+    models = build_models(params["models"])
 
     expected_types = {
         "popularity": PopularityRecommender,
@@ -61,9 +56,7 @@ def test_models_have_required_config():
 
     params = load_params()
 
-    models = build_models(
-        params["models"]
-    )
+    models = build_models(params["models"])
 
     for config in models.values():
         assert "input" in config

@@ -6,10 +6,8 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
-from torch.utils.data import Dataset, DataLoader
-
 from scipy.sparse import csr_matrix
+from torch.utils.data import DataLoader, Dataset
 
 from .base import RecommenderBase
 
@@ -17,19 +15,15 @@ logger = logging.getLogger("runner")
 
 
 class InteractionDataset(Dataset):
-
     def __init__(self, interactions: pd.DataFrame):
-
         self.users = interactions["user_idx"].values
         self.items = interactions["item_idx"].values
         self.labels = interactions["label"].values.astype(np.float32)
 
     def __len__(self):
-
         return len(self.users)
 
     def __getitem__(self, idx):
-
         return (
             torch.tensor(self.users[idx], dtype=torch.long),
             torch.tensor(self.items[idx], dtype=torch.long),
@@ -38,7 +32,6 @@ class InteractionDataset(Dataset):
 
 
 class MLP(nn.Module):
-
     def __init__(
         self,
         n_users: int,
@@ -46,52 +39,32 @@ class MLP(nn.Module):
         emb_dim: int = 64,
         dropout: float = 0.2,
     ):
-
         super().__init__()
 
-        self.user_emb = nn.Embedding(
-            n_users,
-            emb_dim
-        )
+        self.user_emb = nn.Embedding(n_users, emb_dim)
 
-        self.item_emb = nn.Embedding(
-            n_items,
-            emb_dim
-        )
+        self.item_emb = nn.Embedding(n_items, emb_dim)
 
         self.fc = nn.Sequential(
             nn.Linear(emb_dim * 2, 128),
             nn.ReLU(),
-
             nn.Dropout(dropout),
-
             nn.Linear(128, 64),
             nn.ReLU(),
-
             nn.Dropout(dropout),
-
-            nn.Linear(64, 1)
+            nn.Linear(64, 1),
         )
 
-    def forward(
-        self,
-        user: torch.Tensor,
-        item: torch.Tensor
-    ) -> torch.Tensor:
-
+    def forward(self, user: torch.Tensor, item: torch.Tensor) -> torch.Tensor:
         user_emb = self.user_emb(user)
         item_emb = self.item_emb(item)
 
-        x = torch.cat(
-            [user_emb, item_emb],
-            dim=1
-        )
+        x = torch.cat([user_emb, item_emb], dim=1)
 
         return self.fc(x).squeeze(-1)
 
 
 class MLPRecommender(RecommenderBase):
-
     def __init__(
         self,
         emb_dim: int = 16,
@@ -104,7 +77,6 @@ class MLPRecommender(RecommenderBase):
         seed: int = 42,
         device: str | None = None,
     ):
-
         self.emb_dim = emb_dim
         self.lr = lr
         self.epochs = epochs
@@ -113,11 +85,7 @@ class MLPRecommender(RecommenderBase):
         self.patience = patience
         self.dropout = dropout
 
-        self.device = device or (
-            "cuda"
-            if torch.cuda.is_available()
-            else "cpu"
-        )
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
         self.rng = np.random.default_rng(seed)
 
@@ -127,7 +95,6 @@ class MLPRecommender(RecommenderBase):
         self,
         train_matrix: csr_matrix,
     ):
-
         self.train_matrix = train_matrix
 
         users, items = train_matrix.nonzero()
@@ -139,12 +106,7 @@ class MLPRecommender(RecommenderBase):
             }
         )
 
-        self.user_items = (
-            train_interactions
-            .groupby("user_idx")["item_idx"]
-            .apply(set)
-            .to_dict()
-        )
+        self.user_items = train_interactions.groupby("user_idx")["item_idx"].apply(set).to_dict()
 
         self.n_users = train_matrix.shape[0]
         self.n_items = train_matrix.shape[1]
@@ -165,17 +127,12 @@ class MLPRecommender(RecommenderBase):
 
         best_loss = float("inf")
 
-        best_weights = copy.deepcopy(
-            self.model.state_dict()
-        )
+        best_weights = copy.deepcopy(self.model.state_dict())
 
         epochs_without_improvement = 0
 
         for epoch in range(self.epochs):
-
-            train_df = self._build_training_dataframe(
-                train_interactions
-            )
+            train_df = self._build_training_dataframe(train_interactions)
 
             train_loader = DataLoader(
                 InteractionDataset(train_df),
@@ -189,40 +146,24 @@ class MLPRecommender(RecommenderBase):
                 optimizer,
             )
 
-            logger.info(
-                f"Epoch {epoch + 1:02d} | "
-                f"loss={train_loss:.4f}"
-            )
+            logger.info(f"Epoch {epoch + 1:02d} | " f"loss={train_loss:.4f}")
 
             if train_loss < best_loss:
-
                 best_loss = train_loss
 
-                best_weights = copy.deepcopy(
-                    self.model.state_dict()
-                )
+                best_weights = copy.deepcopy(self.model.state_dict())
 
                 epochs_without_improvement = 0
 
             else:
-
                 epochs_without_improvement += 1
 
-                if (
-                    epochs_without_improvement
-                    >= self.patience
-                ):
-
-                    print(
-                        f"Early stopping "
-                        f"after {epoch + 1} epochs"
-                    )
+                if epochs_without_improvement >= self.patience:
+                    print(f"Early stopping " f"after {epoch + 1} epochs")
 
                     break
 
-        self.model.load_state_dict(
-            best_weights
-        )
+        self.model.load_state_dict(best_weights)
 
         return self
 
@@ -232,13 +173,11 @@ class MLPRecommender(RecommenderBase):
         criterion: nn.Module,
         optimizer: optim.Optimizer,
     ) -> float:
-
         self.model.train()
 
         total_loss = 0.0
 
         for user, item, label in loader:
-
             user = user.to(self.device)
             item = item.to(self.device)
             label = label.to(self.device)
@@ -268,15 +207,12 @@ class MLPRecommender(RecommenderBase):
         loader: DataLoader,
         criterion: nn.Module,
     ) -> float:
-
         self.model.eval()
 
         total_loss = 0.0
 
         with torch.no_grad():
-
             for user, item, label in loader:
-
                 user = user.to(self.device)
                 item = item.to(self.device)
                 label = label.to(self.device)
@@ -299,16 +235,11 @@ class MLPRecommender(RecommenderBase):
         self,
         interactions: pd.DataFrame,
     ) -> pd.DataFrame:
-
-        positives = interactions[
-            ["user_idx", "item_idx"]
-        ].copy()
+        positives = interactions[["user_idx", "item_idx"]].copy()
 
         positives["label"] = 1.0
 
-        negatives = self._sample_negatives(
-            positives
-        )
+        negatives = self._sample_negatives(positives)
 
         return pd.concat(
             [positives, negatives],
@@ -319,17 +250,14 @@ class MLPRecommender(RecommenderBase):
         self,
         positives: pd.DataFrame,
     ) -> pd.DataFrame:
-
         rows = []
 
         for user_id in positives["user_idx"]:
-
             consumed = self.user_items[user_id]
 
             sampled = set()
 
             while len(sampled) < self.negative_ratio:
-
                 candidate = self.rng.integers(
                     0,
                     self.n_items,
@@ -344,7 +272,6 @@ class MLPRecommender(RecommenderBase):
                 sampled.add(candidate)
 
             for item_id in sampled:
-
                 rows.append(
                     (
                         user_id,
@@ -367,7 +294,6 @@ class MLPRecommender(RecommenderBase):
         user_ids: pd.Series,
         item_ids: pd.Series,
     ) -> pd.Series:
-
         self.model.eval()
 
         users = torch.tensor(
@@ -381,15 +307,12 @@ class MLPRecommender(RecommenderBase):
         ).to(self.device)
 
         with torch.no_grad():
-
             logits = self.model(
                 users,
                 items,
             )
 
-            scores = torch.sigmoid(
-                logits
-            ).cpu().numpy()
+            scores = torch.sigmoid(logits).cpu().numpy()
 
         return pd.Series(
             scores,

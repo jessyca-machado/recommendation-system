@@ -1,7 +1,7 @@
-from src.experiments.protocol import build_candidates_ncf
-
 import numpy as np
 import pandas as pd
+
+from src.experiments.protocol import build_candidates_ncf
 
 
 def evaluate_ncf_from_ranked(
@@ -31,7 +31,7 @@ def evaluate_ncf_from_ranked(
     r = merged["rank"].to_numpy(dtype=float)
     ndcg = float(np.where(np.isnan(r), 0.0, 1.0 / np.log2(r + 1)).mean())
 
-    mrr  = float(np.where(np.isnan(r), 0.0, 1.0 / r).mean())
+    mrr = float(np.where(np.isnan(r), 0.0, 1.0 / r).mean())
 
     return {
         "hit_rate@k": hit_rate,
@@ -39,6 +39,7 @@ def evaluate_ncf_from_ranked(
         "ndcg@k": ndcg,
         "mrr@k": mrr,
     }
+
 
 def evaluate_model_ncf(
     model,

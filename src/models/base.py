@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+
 import pandas as pd
 
-class RecommenderBase(ABC):
 
+class RecommenderBase(ABC):
     @abstractmethod
     def fit(self, interactions):
         pass

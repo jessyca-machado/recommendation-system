@@ -5,7 +5,6 @@ from src.experiments.runner import run_experiments
 
 @patch("src.experiments.runner.evaluate_model_ncf")
 def test_runner_returns_results(mock_evaluate):
-
     mock_evaluate.return_value = {
         "hit_rate@k": 0.80,
         "precision@k": 0.50,

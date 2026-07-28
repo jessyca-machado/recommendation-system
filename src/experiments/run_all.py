@@ -1,14 +1,9 @@
-
 """Runner de experimentos: treina várias configurações, registra cada uma no
 MLflow e promove a melhor (por NDCG) a produção no Model Registry.
 
 Uso:
     python src/experiments/run_all.py
 """
-from src.config.settings import configure_runtime, settings
-
-configure_runtime(settings)
-
 import json
 import logging
 
@@ -17,8 +12,9 @@ from rich.console import Console
 from rich.logging import RichHandler
 from scipy.sparse import csr_matrix
 
-from src.experiments.runner import run_experiments
 from src.config.params import load_params
+from src.config.settings import configure_runtime, settings
+from src.experiments.runner import run_experiments
 from src.models.factory import build_models
 from src.prepare import (
     apply_mappings,
@@ -28,6 +24,8 @@ from src.prepare import (
     save_datasets,
     split_train_test,
 )
+
+configure_runtime(settings)
 
 console = Console()
 
@@ -48,18 +46,14 @@ logger = logging.getLogger("experiments")
 
 
 def main():
-
     params = load_params()
 
-    models = build_models(
-        params["models"]
-    )
+    models = build_models(params["models"])
 
     mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
     mlflow.set_experiment(settings.mlflow_experiment_name)
 
     with mlflow.start_run(run_name="experiment_runner"):
-
         mlflow.log_params(
             {
                 "tracking_uri": settings.mlflow_tracking_uri,
@@ -77,11 +71,7 @@ def main():
 
         logger.info("Building mappings...")
         train, user2idx, item2idx = build_mappings(train)
-        test = apply_mappings(
-            test,
-            user2idx,
-            item2idx
-        )
+        test = apply_mappings(test, user2idx, item2idx)
 
         logger.info(
             "Users: %s | Items: %s",
@@ -147,7 +137,10 @@ def main():
 
         logger.info("Finished %s experiments", len(results))
 
-        mlflow.log_metric("num_experiments", len(results),)
+        mlflow.log_metric(
+            "num_experiments",
+            len(results),
+        )
 
         logger.info("Saving metrics...")
 
@@ -161,10 +154,7 @@ def main():
             exist_ok=True,
         )
 
-        metrics_file = (
-            settings.metrics_dir
-            / "experiment_results.json"
-        )
+        metrics_file = settings.metrics_dir / "experiment_results.json"
 
         with metrics_file.open("w") as f:
             json.dump(results, f, indent=2)
@@ -184,25 +174,37 @@ def main():
             best_model["ndcg@k"],
         )
 
-        mlflow.log_param("best_model", best_model["model"],)
+        mlflow.log_param(
+            "best_model",
+            best_model["model"],
+        )
 
-        mlflow.log_metric("best_ndcg_at_10",best_model["ndcg@k"],)
+        mlflow.log_metric(
+            "best_ndcg_at_10",
+            best_model["ndcg@k"],
+        )
 
         if "precision@k" in best_model:
-            mlflow.log_metric("best_precision_at_10", best_model["precision@k"],)
+            mlflow.log_metric(
+                "best_precision_at_10",
+                best_model["precision@k"],
+            )
 
         if "recall@k" in best_model:
-            mlflow.log_metric("best_recall_at_10", best_model["recall@k"],)
+            mlflow.log_metric(
+                "best_recall_at_10",
+                best_model["recall@k"],
+            )
 
         if "mrr@k" in best_model:
-            mlflow.log_metric("best_mrr_at_10", best_model["mrr@k"],)
+            mlflow.log_metric(
+                "best_mrr_at_10",
+                best_model["mrr@k"],
+            )
 
         logger.info("Saving best model metadata...")
 
-        best_model_file = (
-            settings.models_dir
-            / "best_model.json"
-        )
+        best_model_file = settings.models_dir / "best_model.json"
 
         with best_model_file.open("w") as f:
             json.dump(best_model, f, indent=2)

@@ -1,23 +1,19 @@
 # src/models/als.py
 
+import numpy as np
+import pandas as pd
 from implicit.als import AlternatingLeastSquares
 
 from src.models.base import RecommenderBase
 
-import pandas as pd
-
-import numpy as np
-
 
 class ALSRecommender(RecommenderBase):
-
     def __init__(
         self,
         factors=64,
         iterations=20,
         regularization=0.01,
     ):
-
         self.model = AlternatingLeastSquares(
             factors=factors,
             iterations=iterations,
@@ -25,19 +21,13 @@ class ALSRecommender(RecommenderBase):
         )
 
     def fit(self, matrix):
-
         self.user_item_matrix = matrix.tocsr()
 
-        self.item_user_matrix = (
-            self.user_item_matrix.T.tocsr()
-        )
+        self.item_user_matrix = self.user_item_matrix.T.tocsr()
 
-        self.model.fit(
-            self.item_user_matrix
-        )
+        self.model.fit(self.item_user_matrix)
 
         return self
-
 
     def recommend(
         self,
@@ -63,15 +53,9 @@ class ALSRecommender(RecommenderBase):
             top_item_ids = item_ids[:k]
             top_scores = scores[:k]
 
-            for rank, (item, score) in enumerate(zip(top_item_ids, top_scores), start=1):
+            for rank, (item, score) in enumerate(
+                zip(top_item_ids, top_scores, strict=True), start=1
+            ):
                 preds.append([int(user), int(item), rank, float(score)])
 
-        return pd.DataFrame(
-            preds,
-            columns=[
-                "user_idx",
-                "item_idx",
-                "rank",
-                "score"
-            ]
-        )
+        return pd.DataFrame(preds, columns=["user_idx", "item_idx", "rank", "score"])

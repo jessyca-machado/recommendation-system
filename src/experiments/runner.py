@@ -22,7 +22,6 @@ def run_experiments(
     num_eval_negatives=99,
     random_seed=42,
 ):
-
     results = []
 
     total_models = len(models)
@@ -36,7 +35,6 @@ def run_experiments(
         models.items(),
         start=1,
     ):
-
         logger.info(
             "[%s/%s] Running %s",
             idx,
@@ -59,9 +57,7 @@ def run_experiments(
             model.fit(train_matrix)
 
         else:
-            raise ValueError(
-                f"Unknown input type: {input_type}"
-            )
+            raise ValueError(f"Unknown input type: {input_type}")
 
         train_time = time.perf_counter() - start_time
 
@@ -75,7 +71,6 @@ def run_experiments(
             "[%s] Evaluating...",
             name,
         )
-
 
         metrics = evaluate_model_ncf(
             model=model,

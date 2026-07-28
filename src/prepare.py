@@ -4,6 +4,7 @@ Uso:
     python src/prepare.py
 """
 import logging
+
 import pandas as pd
 
 from src.config.settings import settings
@@ -25,10 +26,7 @@ def load_data() -> pd.DataFrame:
     return df
 
 
-def split_train_test(
-    df: pd.DataFrame,
-    test_size: float = 0.2
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+def split_train_test(df: pd.DataFrame, test_size: float = 0.2) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Divide o dataset em treino e teste com base na coluna de timestamp.
 
@@ -38,7 +36,7 @@ def split_train_test(
     """
     df = df.copy()
 
-    df['datetime'] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
+    df["datetime"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True)
 
     cutoff = df["datetime"].quantile(1 - test_size)
 
@@ -48,13 +46,9 @@ def split_train_test(
     train_users = set(train["visitorid"])
     train_items = set(train["itemid"])
 
-    test = test[
-        test["visitorid"].isin(train_users)
-    ]
+    test = test[test["visitorid"].isin(train_users)]
 
-    test = test[
-        test["itemid"].isin(train_items)
-    ]
+    test = test[test["itemid"].isin(train_items)]
 
     return train, test
 
@@ -85,7 +79,6 @@ def save_datasets(
     )
 
 
-
 def load_train_test() -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Carrega os datasets de treino e teste a partir dos arquivos parquet.
@@ -109,7 +102,6 @@ def load_train_test() -> tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def build_mappings(df):
-
     user_ids = df["visitorid"].unique()
     item_ids = df["itemid"].unique()
 
@@ -124,12 +116,7 @@ def build_mappings(df):
     return df, user2idx, item2idx
 
 
-def apply_mappings(
-    df,
-    user2idx,
-    item2idx
-):
-
+def apply_mappings(df, user2idx, item2idx):
     df = df.copy()
 
     df["user_idx"] = df["visitorid"].map(user2idx)
@@ -163,11 +150,7 @@ if __name__ == "__main__":
     train, test = split_train_test(df)
 
     train, user2idx, item2idx = build_mappings(train)
-    test = apply_mappings(
-        test,
-        user2idx,
-        item2idx
-    )
+    test = apply_mappings(test, user2idx, item2idx)
 
     save_datasets(
         train=train,

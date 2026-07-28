@@ -2,7 +2,6 @@ from src.config.params import load_params
 
 
 def test_params_load():
-
     params = load_params()
 
     assert "experiment" in params

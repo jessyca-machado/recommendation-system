@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 def build_candidates_ncf(
     test: pd.DataFrame,
     train: pd.DataFrame,
@@ -24,17 +25,15 @@ def build_candidates_ncf(
     if positive_strategy == "random_one":
         positives = (
             test.groupby("user_idx", group_keys=False)
-                .sample(n=1, random_state=seed)
-                .reset_index(drop=True)
+            .sample(n=1, random_state=seed)
+            .reset_index(drop=True)
         )[["user_idx", "item_idx"]].copy()
 
     elif positive_strategy == "last":
         if "timestamp" not in test.columns:
             raise ValueError("positive_strategy='last' requer coluna 'timestamp' no test")
         positives = (
-            test.sort_values(["user_idx", "timestamp"])
-                .groupby("user_idx", as_index=False)
-                .tail(1)
+            test.sort_values(["user_idx", "timestamp"]).groupby("user_idx", as_index=False).tail(1)
         )[["user_idx", "item_idx"]].copy()
     else:
         raise ValueError(f"positive_strategy inválida: {positive_strategy}")

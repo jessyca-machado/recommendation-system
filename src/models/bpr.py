@@ -1,27 +1,20 @@
 import numpy as np
 import pandas as pd
-
 from implicit.bpr import BayesianPersonalizedRanking
+
 from .base import RecommenderBase
 
 
 class BPRRecommender(RecommenderBase):
-
     def __init__(
-        self,
-        factors=64,
-        learning_rate=0.01,
-        regularization=0.01,
-        iterations=50,
-        random_state=42
+        self, factors=64, learning_rate=0.01, regularization=0.01, iterations=50, random_state=42
     ):
-
         self.model = BayesianPersonalizedRanking(
             factors=factors,
             learning_rate=learning_rate,
             regularization=regularization,
             iterations=iterations,
-            random_state=random_state
+            random_state=random_state,
         )
         self.matrix = None
 
@@ -50,15 +43,7 @@ class BPRRecommender(RecommenderBase):
             top_items = items[order]
             top_scores = scores[order]
 
-            for rank, (item, score) in enumerate(zip(top_items, top_scores), start=1):
+            for rank, (item, score) in enumerate(zip(top_items, top_scores, strict=True), start=1):
                 preds.append([u, int(item), rank, float(score)])
 
-        return pd.DataFrame(
-            preds,
-            columns=[
-                "user_idx",
-                "item_idx",
-                "rank",
-                "score"
-            ]
-        )
+        return pd.DataFrame(preds, columns=["user_idx", "item_idx", "rank", "score"])

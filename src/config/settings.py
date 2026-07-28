@@ -1,8 +1,7 @@
-from pathlib import Path
 import os
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 
@@ -54,12 +53,6 @@ def configure_runtime(settings: Settings) -> None:
     de bibliotecas numéricas (NumPy, SciPy, Implicit etc.).
     """
 
-    os.environ["OPENBLAS_NUM_THREADS"] = str(
-        settings.openblas_num_threads
-    )
-    os.environ["OMP_NUM_THREADS"] = str(
-        settings.omp_num_threads
-    )
-    os.environ["MKL_NUM_THREADS"] = str(
-        settings.mkl_num_threads
-    )
+    os.environ["OPENBLAS_NUM_THREADS"] = str(settings.openblas_num_threads)
+    os.environ["OMP_NUM_THREADS"] = str(settings.omp_num_threads)
+    os.environ["MKL_NUM_THREADS"] = str(settings.mkl_num_threads)

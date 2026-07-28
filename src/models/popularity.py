@@ -1,5 +1,7 @@
 import pandas as pd
+
 from .base import RecommenderBase
+
 
 class PopularityRecommender(RecommenderBase):
     def __init__(self) -> None:

@@ -179,28 +179,20 @@ def main():
             best_model["model"],
         )
 
-        mlflow.log_metric(
-            "best_ndcg_at_10",
-            best_model["ndcg@k"],
-        )
+        metric_mapping = {
+            "ndcg@k": "best_ndcg_at_10",
+            "hit_rate@k": "best_hit_rate_at_10",
+            "precision@k": "best_precision_at_10",
+            "recall@k": "best_recall_at_10",
+            "mrr@k": "best_mrr_at_10",
+        }
 
-        if "precision@k" in best_model:
-            mlflow.log_metric(
-                "best_precision_at_10",
-                best_model["precision@k"],
-            )
-
-        if "recall@k" in best_model:
-            mlflow.log_metric(
-                "best_recall_at_10",
-                best_model["recall@k"],
-            )
-
-        if "mrr@k" in best_model:
-            mlflow.log_metric(
-                "best_mrr_at_10",
-                best_model["mrr@k"],
-            )
+        for source_metric, target_metric in metric_mapping.items():
+            if source_metric in best_model:
+                mlflow.log_metric(
+                    target_metric,
+                    best_model[source_metric],
+                )
 
         logger.info("Saving best model metadata...")
 

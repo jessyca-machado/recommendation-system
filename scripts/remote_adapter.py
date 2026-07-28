@@ -25,7 +25,7 @@ class RemotePlan:
     uri: str
     requires_credentials: bool
     fallback_uri: str
-    setup_commands: list[str]
+    dvc_commands: list[str]
 
 
 class RemoteAdapter(Protocol):
@@ -48,9 +48,9 @@ class LocalAdapter:
             uri=remote.uri,
             requires_credentials=False,
             fallback_uri=str(fallback_dir),
-            setup_commands=[
+            dvc_commands=[
                 f"dvc remote add -d {remote.name} {remote.uri}",
-                f"mkdir {fallback_dir.name}",
+                f"mkdir -p {fallback_dir}",
             ],
         )
 
@@ -67,10 +67,10 @@ class CloudAdapter:
             uri=remote.uri,
             requires_credentials=True,
             fallback_uri=str(fallback_dir),
-            setup_commands=[
+            dvc_commands=[
                 f"dvc remote add -d {remote.name} {remote.uri}",
                 f"dvc remote modify {remote.name} credentialpath ./secrets/{remote.name}.json",
-                f"dvc remote add {remote.name}-offline {fallback_dir}",
+                f"dvc remote add {remote.name}-offline .demo-remotes/{remote.name}",
             ],
         )
 
@@ -96,7 +96,7 @@ def build_remote_plan(remote: RemoteDefinition, base_dir: Path | None = None) ->
 def build_demo_plans() -> list[RemotePlan]:
     """Constroi tres cenarios para a aula."""
 
-    base_dir = Path(__file__).resolve().parent
+    base_dir = Path(__file__).resolve().parents[1]
     remotes = [
         RemoteDefinition(name="local-cache", uri="./artifacts/dvc-cache"),
         RemoteDefinition(name="team-s3", uri="s3://mlet-demo/dvc-cache"),

@@ -1,4 +1,4 @@
 [core]
-    remote = localstorage
-['remote "localstorage"']
-    url = ../../recommendation-system-storage
+    remote = local-cache
+['remote "local-cache"']
+    url = ../artifacts/dvc-cache

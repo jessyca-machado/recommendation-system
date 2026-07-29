@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     # ========= MLflow =========
     mlflow_tracking_uri: str = "http://mlflow:5000"
     mlflow_experiment_name: str = "recommendation-system"
+    mlflow_registered_model_name: str = "recommendation-model"
 
     # ========= Diretórios =========
     root_dir: Path = ROOT_DIR

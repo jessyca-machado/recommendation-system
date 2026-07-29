@@ -14,6 +14,10 @@ from scipy.sparse import csr_matrix
 
 from src.config.params import load_params
 from src.config.settings import configure_runtime, settings
+from src.experiments.registry import (
+    promote_model,
+    register_model,
+)
 from src.experiments.runner import run_experiments
 from src.models.factory import build_models
 from src.prepare import (
@@ -135,6 +139,12 @@ def main():
             random_seed=params["experiment"]["random_seed"],
         )
 
+        for result in results:
+            mlflow.log_metric(
+                f'{result["model"]}_ndcg_at_10',
+                result["ndcg@k"],
+            )
+
         logger.info("Finished %s experiments", len(results))
 
         mlflow.log_metric(
@@ -156,8 +166,13 @@ def main():
 
         metrics_file = settings.metrics_dir / "experiment_results.json"
 
+        results_metadata = [
+            {key: value for key, value in result.items() if key != "estimator"}
+            for result in results
+        ]
+
         with metrics_file.open("w") as f:
-            json.dump(results, f, indent=2)
+            json.dump(results_metadata, f, indent=2)
 
         mlflow.log_artifact(str(metrics_file))
 
@@ -194,12 +209,37 @@ def main():
                     best_model[source_metric],
                 )
 
+        logger.info("Registering best model...")
+
+        version = register_model(
+            model=best_model["estimator"],
+            model_name=settings.mlflow_registered_model_name,
+        )
+
+        best_model["version"] = version
+
+        logger.info("Promoting model to staging...")
+
+        promote_model(
+            model_name=settings.mlflow_registered_model_name,
+            version=version,
+            alias="staging",
+        )
+
         logger.info("Saving best model metadata...")
 
         best_model_file = settings.models_dir / "best_model.json"
 
+        best_model_metadata = {
+            key: value for key, value in best_model.items() if key != "estimator"
+        }
+
         with best_model_file.open("w") as f:
-            json.dump(best_model, f, indent=2)
+            json.dump(
+                best_model_metadata,
+                f,
+                indent=2,
+            )
 
         mlflow.log_artifact(str(best_model_file))
 

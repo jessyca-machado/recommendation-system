@@ -43,7 +43,6 @@ def run_experiments(
         )
 
         input_type = cfg["input"]
-
         model = cfg["model"]
 
         start_time = time.perf_counter()
@@ -98,6 +97,8 @@ def run_experiments(
         results.append(
             {
                 "model": name,
+                "estimator": model,
+                "input": input_type,
                 **metrics,
                 "train_time_seconds": round(
                     train_time,

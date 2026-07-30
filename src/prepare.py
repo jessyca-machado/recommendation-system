@@ -53,6 +53,26 @@ def split_train_test(df: pd.DataFrame, test_size: float = 0.2) -> tuple[pd.DataF
     return train, test
 
 
+def save_item_catalog(train: pd.DataFrame) -> None:
+    """
+    Salva o catálogo de itens utilizados na inferência.
+
+    Returns:
+        None
+    """
+    item_catalog = train[["item_idx", "itemid"]].drop_duplicates().sort_values("item_idx")
+
+    item_catalog.to_parquet(
+        settings.processed_data_dir / "item_catalog.parquet",
+        index=False,
+    )
+
+    logger.info(
+        "Item catalog salvo: %d itens",
+        len(item_catalog),
+    )
+
+
 def save_datasets(
     train: pd.DataFrame,
     test: pd.DataFrame,
@@ -77,6 +97,8 @@ def save_datasets(
         settings.test_path,
         index=False,
     )
+
+    save_item_catalog(train)
 
 
 def load_train_test() -> tuple[pd.DataFrame, pd.DataFrame]:

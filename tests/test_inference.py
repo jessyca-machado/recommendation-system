@@ -1,3 +1,4 @@
+from src.inference.catalog import load_item_catalog
 from src.inference.loader import load_production_model
 
 MODEL_NAME = "recommendation-model"
@@ -32,3 +33,16 @@ def test_model_has_recommendation_method():
         model,
         "recommend",
     )
+
+
+def test_catalog_loaded():
+    catalog = load_item_catalog()
+
+    assert len(catalog) > 0
+
+
+def test_catalog_has_required_columns():
+    catalog = load_item_catalog()
+
+    assert "item_idx" in catalog.columns
+    assert "itemid" in catalog.columns

@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     """Configurações da aplicação."""
 
     # ========= MLflow =========
-    mlflow_tracking_uri: str = "http://mlflow:5000"
+    mlflow_tracking_uri: str = "http://localhost:5000"
     mlflow_experiment_name: str = "recommendation-system"
     mlflow_registered_model_name: str = "recommendation-model"
 

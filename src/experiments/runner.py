@@ -3,8 +3,10 @@
 import logging
 import time
 
+import pandas as pd
 from rich.console import Console
 from rich.table import Table
+from scipy.sparse import csr_matrix
 
 from src.experiments.evaluator import evaluate_model_ncf
 
@@ -13,16 +15,32 @@ console = Console()
 
 
 def run_experiments(
-    train_df,
-    train_matrix,
-    test,
-    models,
-    k=10,
-    n_items=None,
-    num_eval_negatives=99,
-    random_seed=42,
-):
-    results = []
+    train_df: pd.DataFrame,
+    train_matrix: csr_matrix,
+    test: pd.DataFrame,
+    models: dict[str, dict[str, object]],
+    k: int = 10,
+    n_items: int | None = None,
+    num_eval_negatives: int = 99,
+    random_seed: int = 42,
+) -> list[dict[str, object]]:
+    """Executa treinamento e avaliação para todos os modelos configurados.
+
+    Args:
+        train_df: DataFrame com as interações de treino.
+        train_matrix: Matriz esparsa de treino.
+        test: DataFrame com as interações de teste.
+        models: Configuração dos modelos a serem avaliados.
+        k: Tamanho do top-k avaliado.
+        n_items: Quantidade total de itens.
+        num_eval_negatives: Quantidade de negativos para avaliação.
+        random_seed: Semente aleatória para avaliação.
+
+    Returns:
+        list[dict[str, object]]: Lista com métricas e estimadores por modelo.
+    """
+
+    results: list[dict[str, object]] = []
 
     total_models = len(models)
 
@@ -82,7 +100,7 @@ def run_experiments(
         )
 
         logger.info(
-            "[%s] Hit Rate@%s=%.4f | Precision@%s=%.4f | NDCG@%s=%.4f | MRR@%s=%.4f",
+            "[%s] Hit Rate@%s=%.4f | Precision@%s=%.4f | NDCG@%s=%.4f | " "MRR@%s=%.4f",
             name,
             k,
             metrics["hit_rate@k"],

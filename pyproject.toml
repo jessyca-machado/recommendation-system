@@ -36,10 +36,9 @@ dependencies = [
 
 [project.scripts]
 validate-env = "scripts.validate_env:main"
-prepare = "src.prepare:main"
+prepare = "src.data.prepare:main"
 train = "src.experiments.run_all:main"
-# evaluate = "src.evaluate:main"
-# serve = "src.api.main:start"
+promote = "src.promote:main"
 
 [dependency-groups]
 dev = [

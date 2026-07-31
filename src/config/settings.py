@@ -49,9 +49,10 @@ settings = Settings()
 
 
 def configure_runtime(settings: Settings) -> None:
-    """
-    Configura variáveis de ambiente antes do carregamento
-    de bibliotecas numéricas (NumPy, SciPy, Implicit etc.).
+    """Configura variáveis de ambiente para bibliotecas numéricas.
+
+    Args:
+        settings: Objeto com as configurações de paralelismo do runtime.
     """
 
     os.environ["OPENBLAS_NUM_THREADS"] = str(settings.openblas_num_threads)

@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -8,12 +10,16 @@ def evaluate_ncf_from_ranked(
     recs: pd.DataFrame,
     candidates: pd.DataFrame,
     k: int = 10,
-) -> dict:
-    """
-    Avalia HR/NDCG/Precision/Recall no protocolo NCF (1 positivo por user).
+) -> dict[str, float]:
+    """Avalia métricas de ranking para o protocolo NCF.
 
-    recs: DataFrame com colunas [user_idx, item_idx, rank] (top-k por user)
-    candidates: DataFrame [user_idx, item_idx, label] com 1 positivo (label=1) por user
+    Args:
+        recs: DataFrame com colunas user_idx, item_idx e rank.
+        candidates: DataFrame com user_idx, item_idx e label.
+        k: Tamanho do top-k avaliado.
+
+    Returns:
+        dict[str, float]: Métricas hit rate, precision, ndcg e mrr.
     """
     pos = candidates[candidates["label"] == 1][["user_idx", "item_idx"]]
 
@@ -42,7 +48,7 @@ def evaluate_ncf_from_ranked(
 
 
 def evaluate_model_ncf(
-    model,
+    model: Any,
     train_df: pd.DataFrame,
     test_df: pd.DataFrame,
     n_items: int,
@@ -50,7 +56,22 @@ def evaluate_model_ncf(
     num_eval_negatives: int = 99,
     seed: int = 42,
     positive_strategy: str = "random_one",
-) -> dict:
+) -> dict[str, float]:
+    """Executa a avaliação de um modelo no protocolo NCF.
+
+    Args:
+        model: Modelo recomendador com método recommend.
+        train_df: DataFrame de treino.
+        test_df: DataFrame de teste.
+        n_items: Quantidade total de itens.
+        k: Tamanho do ranking avaliado.
+        num_eval_negatives: Quantidade de negativos por usuário.
+        seed: Semente aleatória para a geração de candidatos.
+        positive_strategy: Estratégia para seleção dos positivos.
+
+    Returns:
+        dict[str, float]: Métricas de avaliação.
+    """
     candidates = build_candidates_ncf(
         test=test_df,
         train=train_df,

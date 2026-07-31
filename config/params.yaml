@@ -1,3 +1,6 @@
+prepare:
+  test_size: 0.2
+
 experiment:
   random_seed: 42
   top_k: 10

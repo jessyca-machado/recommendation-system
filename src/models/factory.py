@@ -30,8 +30,20 @@ MODEL_FACTORY = {
 }
 
 
-def build_models(config: dict):
-    models = {}
+def build_models(
+    config: dict[str, dict[str, object]],
+) -> dict[str, dict[str, object]]:
+    """Constrói os modelos configurados para execução.
+
+    Args:
+        config: Dicionário com a configuração de cada modelo.
+
+    Returns:
+        dict[str, dict[str, object]]: Metadados e instâncias dos modelos
+            habilitados.
+    """
+
+    models: dict[str, dict[str, object]] = {}
 
     for model_name, model_cfg in config.items():
         if not model_cfg["enabled"]:

@@ -8,6 +8,12 @@ from remote_adapter import (
 
 
 def run(command: str) -> None:
+    """Executa um comando do shell com verificação de erro.
+
+    Args:
+        command: Comando shell a ser executado.
+    """
+
     subprocess.run(
         command,
         shell=True,
@@ -16,6 +22,8 @@ def run(command: str) -> None:
 
 
 def setup_dvc_init() -> None:
+    """Inicializa o DVC no repositório, quando ainda não estiver ativo."""
+
     if Path(".dvc").exists():
         print("DVC já inicializado.")
         return
@@ -24,6 +32,8 @@ def setup_dvc_init() -> None:
 
 
 def setup_dataset() -> None:
+    """Versiona o dataset principal com o DVC, se ainda não estiver versionado."""
+
     dvc_file = Path("data/raw/events.csv.dvc")
 
     if dvc_file.exists():
@@ -34,6 +44,15 @@ def setup_dataset() -> None:
 
 
 def remote_exists(name: str) -> bool:
+    """Verifica se um remoto DVC já está configurado.
+
+    Args:
+        name: Nome do remoto DVC.
+
+    Returns:
+        bool: True se o remoto existir, False caso contrário.
+    """
+
     result = subprocess.run(
         ["dvc", "remote", "list"],
         capture_output=True,
@@ -45,13 +64,12 @@ def remote_exists(name: str) -> bool:
 
 
 def main() -> None:
-    # 1. Inicializa DVC
+    """Executa a configuração completa do DVC e dos remotos."""
+
     setup_dvc_init()
 
-    # 2. Versiona dataset
     setup_dataset()
 
-    # 3. Configura remote
     remote = RemoteDefinition(
         name="local-cache",
         uri="./artifacts/dvc-cache",

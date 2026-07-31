@@ -69,8 +69,11 @@ class CloudAdapter:
             fallback_uri=str(fallback_dir),
             dvc_commands=[
                 f"dvc remote add -d {remote.name} {remote.uri}",
-                f"dvc remote modify {remote.name} credentialpath ./secrets/{remote.name}.json",
-                f"dvc remote add {remote.name}-offline .demo-remotes/{remote.name}",
+                (
+                    f"dvc remote modify {remote.name} "
+                    f"credentialpath ./secrets/{remote.name}.json"
+                ),
+                (f"dvc remote add {remote.name}-offline " f".demo-remotes/{remote.name}"),
             ],
         )
 
@@ -85,7 +88,10 @@ def select_adapter(uri: str) -> RemoteAdapter:
     return LocalAdapter()
 
 
-def build_remote_plan(remote: RemoteDefinition, base_dir: Path | None = None) -> RemotePlan:
+def build_remote_plan(
+    remote: RemoteDefinition,
+    base_dir: Path | None = None,
+) -> RemotePlan:
     """Facade simples para montar o plano final do remoto."""
 
     workspace = base_dir or Path(__file__).resolve().parent
@@ -106,4 +112,10 @@ def build_demo_plans() -> list[RemotePlan]:
 
 
 if __name__ == "__main__":
-    print(json.dumps([asdict(item) for item in build_demo_plans()], indent=2, ensure_ascii=False))
+    print(
+        json.dumps(
+            [asdict(item) for item in build_demo_plans()],
+            indent=2,
+            ensure_ascii=False,
+        )
+    )

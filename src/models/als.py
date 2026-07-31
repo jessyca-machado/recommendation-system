@@ -1,5 +1,7 @@
 # src/models/als.py
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 from implicit.als import AlternatingLeastSquares
@@ -8,19 +10,29 @@ from src.models.base import RecommenderBase
 
 
 class ALSRecommender(RecommenderBase):
+    """Modelo ALS para recomendação de itens."""
+
     def __init__(
         self,
-        factors=64,
-        iterations=20,
-        regularization=0.01,
-    ):
+        factors: int = 64,
+        iterations: int = 20,
+        regularization: float = 0.01,
+    ) -> None:
         self.model = AlternatingLeastSquares(
             factors=factors,
             iterations=iterations,
             regularization=regularization,
         )
 
-    def fit(self, matrix):
+    def fit(self, matrix: Any) -> "ALSRecommender":
+        """Treina o modelo com uma matriz de interação esparsa.
+
+        Args:
+            matrix: Matriz esparsa de interações usuário-item.
+
+        Returns:
+            ALSRecommender: Instância treinada do modelo.
+        """
         self.user_item_matrix = matrix.tocsr()
 
         self.item_user_matrix = self.user_item_matrix.T.tocsr()
@@ -31,14 +43,19 @@ class ALSRecommender(RecommenderBase):
 
     def recommend(
         self,
-        candidates: pd.DataFrame,  # colunas: user_idx, item_idx
+        candidates: pd.DataFrame,
         k: int = 10,
     ) -> pd.DataFrame:
+        """Gera ranking de itens para cada usuário a partir dos candidatos.
+
+        Args:
+            candidates: DataFrame com colunas user_idx e item_idx.
+            k: Quantidade máxima de recomendação por usuário.
+
+        Returns:
+            pd.DataFrame: Ranking com colunas user_idx, item_idx, rank e score.
         """
-        Rankeia somente itens candidatos por usuário (protocolo NCF).
-        Retorna: user_idx, item_idx, rank, score
-        """
-        preds = []
+        preds: list[list[float | int]] = []
         for user, group in candidates.groupby("user_idx"):
             user_items = self.user_item_matrix[user]
             selected = group["item_idx"].to_numpy(dtype=np.int32)
@@ -58,4 +75,7 @@ class ALSRecommender(RecommenderBase):
             ):
                 preds.append([int(user), int(item), rank, float(score)])
 
-        return pd.DataFrame(preds, columns=["user_idx", "item_idx", "rank", "score"])
+        return pd.DataFrame(
+            preds,
+            columns=["user_idx", "item_idx", "rank", "score"],
+        )

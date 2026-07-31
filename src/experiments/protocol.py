@@ -10,15 +10,22 @@ def build_candidates_ncf(
     seed: int = 42,
     positive_strategy: str = "random_one",
 ) -> pd.DataFrame:
-    """
-    Protocolo NCF: 1 positivo por usuário + N negativos amostrados.
+    """Constrói os candidatos de avaliação para o protocolo NCF.
 
-    positive_strategy:
-        - "random_one": escolhe 1 interação do test por usuário (aleatória)
-        - "last": escolhe a última interação do test por usuário (requer coluna 'timestamp')
+    Args:
+        test: DataFrame com interações de teste.
+        train: DataFrame com interações de treino.
+        n_items: Quantidade total de itens no catálogo.
+        num_eval_negatives: Quantidade de itens negativos por usuário.
+        seed: Semente aleatória para amostragem.
+        positive_strategy: Estratégia para seleção do positivo: random_one ou last.
 
     Returns:
-        user_idx, item_idx, label (1/0)
+        pd.DataFrame: DataFrame com colunas user_idx, item_idx e label.
+
+    Raises:
+        ValueError: Se a estratégia de positivo for inválida ou se a estratégia last
+            for utilizada sem a coluna timestamp.
     """
     rng = np.random.default_rng(seed)
 

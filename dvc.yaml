@@ -1,48 +1,38 @@
 # dvc.yaml — Pipeline DVC para rastreamento de dados e modelos
 # Executar: dvc repro
-# Ver DAG: dvc dag
 
 stages:
   prepare:
-    cmd: python src/prepare.py
+    cmd: uv run prepare
     deps:
-      - src/prepare.py
+      - src/data/prepare.py
       - data/raw/events.csv
     params:
-      - prepare.test_size
+      - config/params.yaml:
+          - prepare.test_size
     outs:
       - data/processed/train.parquet
       - data/processed/test.parquet
+      - data/processed/item_catalog.parquet
 
   experiments:
-    cmd: python src/experiments/run_all.py
+    cmd: uv run train
     deps:
       - src/experiments/
+      - src/models
       - data/processed/train.parquet
       - data/processed/test.parquet
+    params:
+      - config/params.yaml:
+          - experiment
+          - models
+          - weights
     outs:
       - metrics/experiment_results.json
+      - models/best_model.json
 
-  train:
-    cmd: python src/train.py
+  promote:
+    cmd: uv run promote
     deps:
-      - src/train.py
-      - data/processed/train.parquet
-    params:
-      - train.model_type
-      - train.top_k
-    outs:
-      - models/model.joblib
-    metrics:
-      - metrics/train_metrics.json:
-          cache: false
-
-  evaluate:
-    cmd: python src/evaluate.py
-    deps:
-      - src/evaluate.py
-      - models/model.joblib
-      - data/processed/test.parquet
-    metrics:
-      - metrics/eval_metrics.json:
-          cache: false
+      - src/promote.py
+      - models/best_model.json

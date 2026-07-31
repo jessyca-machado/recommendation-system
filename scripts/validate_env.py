@@ -13,6 +13,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def main() -> None:
+    """Valida o ambiente do projeto e encerra com erro se houver problemas."""
+
     problems = collect_problems()
 
     if problems:
@@ -27,6 +29,12 @@ def main() -> None:
 
 
 def check_params() -> list[str]:
+    """Valida os parâmetros do experimento definidos em params.yaml.
+
+    Returns:
+        list[str]: Lista de problemas encontrados.
+    """
+
     problems: list[str] = []
 
     try:
@@ -48,6 +56,12 @@ def check_params() -> list[str]:
 
 
 def collect_problems() -> list[str]:
+    """Coleta todos os problemas de ambiente e configuração.
+
+    Returns:
+        list[str]: Lista consolidada com os problemas encontrados.
+    """
+
     problems: list[str] = []
 
     problems.extend(check_tools())
@@ -60,6 +74,12 @@ def collect_problems() -> list[str]:
 
 
 def check_tools() -> list[str]:
+    """Valida se as ferramentas obrigatórias estão instaladas.
+
+    Returns:
+        list[str]: Problemas relacionados a ferramentas ausentes.
+    """
+
     problems: list[str] = []
 
     required_tools = [
@@ -75,6 +95,12 @@ def check_tools() -> list[str]:
 
 
 def check_files() -> list[str]:
+    """Valida a presença dos arquivos obrigatórios do projeto.
+
+    Returns:
+        list[str]: Problemas relacionados a arquivos ausentes.
+    """
+
     problems: list[str] = []
 
     required_files = [
@@ -91,6 +117,12 @@ def check_files() -> list[str]:
 
 
 def check_directories() -> list[str]:
+    """Valida a presença dos diretórios obrigatórios do projeto.
+
+    Returns:
+        list[str]: Problemas relacionados a diretórios ausentes.
+    """
+
     problems: list[str] = []
 
     required_dirs = [
@@ -106,6 +138,12 @@ def check_directories() -> list[str]:
 
 
 def check_settings() -> list[str]:
+    """Valida a configuração do MLflow e os dados do projeto.
+
+    Returns:
+        list[str]: Problemas relacionados à configuração do ambiente.
+    """
+
     problems: list[str] = []
 
     if not settings.mlflow_tracking_uri:

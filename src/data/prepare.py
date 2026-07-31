@@ -1,9 +1,10 @@
 """Prepara os datasets de treino e teste a partir do dataset Retail Rocket.
 
 Uso:
-    python src/prepare.py
+    python src/data/prepare.py
 """
 import logging
+from typing import Any
 
 import pandas as pd
 
@@ -17,7 +18,7 @@ def load_data() -> pd.DataFrame:
     """Carrega e pré-processa o dataset Retail Rocket.
 
     Returns:
-        DataFrame com os dados do dataset
+        pd.DataFrame: Dados brutos do dataset com as colunas originais.
     """
     df = pd.read_csv(settings.raw_events_path)
 
@@ -26,13 +27,18 @@ def load_data() -> pd.DataFrame:
     return df
 
 
-def split_train_test(df: pd.DataFrame, test_size: float = 0.2) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Divide o dataset em treino e teste com base na coluna de timestamp.
+def split_train_test(
+    df: pd.DataFrame,
+    test_size: float = 0.2,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Divide os dados em conjuntos de treino e teste por timestamp.
+
+    Args:
+        df: DataFrame com as interações brutas.
+        test_size: Fração do conjunto usada para teste.
 
     Returns:
-        train: DataFrame com os dados de treino
-        test: DataFrame com os dados de teste
+        tuple[pd.DataFrame, pd.DataFrame]: DataFrames de treino e teste.
     """
     df = df.copy()
 
@@ -54,11 +60,10 @@ def split_train_test(df: pd.DataFrame, test_size: float = 0.2) -> tuple[pd.DataF
 
 
 def save_item_catalog(train: pd.DataFrame) -> None:
-    """
-    Salva o catálogo de itens utilizados na inferência.
+    """Salva o catálogo de itens utilizados na inferência.
 
-    Returns:
-        None
+    Args:
+        train: DataFrame de treino já com índices mapeados.
     """
     item_catalog = train[["item_idx", "itemid"]].drop_duplicates().sort_values("item_idx")
 
@@ -77,11 +82,11 @@ def save_datasets(
     train: pd.DataFrame,
     test: pd.DataFrame,
 ) -> None:
-    """
-    Salva os datasets de treino e teste em arquivos parquet.
+    """Salva dados de treino e teste em formato parquet.
 
-    Returns:
-        None
+    Args:
+        train: DataFrame de treino preparado.
+        test: DataFrame de teste preparado.
     """
     settings.processed_data_dir.mkdir(
         parents=True,
@@ -102,12 +107,10 @@ def save_datasets(
 
 
 def load_train_test() -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Carrega os datasets de treino e teste a partir dos arquivos parquet.
+    """Carrega os dados de treino e teste a partir dos arquivos parquet.
 
     Returns:
-        train: DataFrame com os dados de treino
-        test: DataFrame com os dados de teste
+        tuple[pd.DataFrame, pd.DataFrame]: DataFrames de treino e teste.
     """
     train = pd.read_parquet(
         settings.train_path,
@@ -123,7 +126,18 @@ def load_train_test() -> tuple[pd.DataFrame, pd.DataFrame]:
     return train, test
 
 
-def build_mappings(df):
+def build_mappings(
+    df: pd.DataFrame,
+) -> tuple[pd.DataFrame, dict[Any, int], dict[Any, int]]:
+    """Cria mapeamentos de usuários e itens para índices numéricos.
+
+    Args:
+        df: DataFrame com as colunas de usuário e item.
+
+    Returns:
+        tuple[pd.DataFrame, dict[Any, int], dict[Any, int]]: DataFrame com índices e
+            dicionários de mapeamento.
+    """
     user_ids = df["visitorid"].unique()
     item_ids = df["itemid"].unique()
 
@@ -138,7 +152,21 @@ def build_mappings(df):
     return df, user2idx, item2idx
 
 
-def apply_mappings(df, user2idx, item2idx):
+def apply_mappings(
+    df: pd.DataFrame,
+    user2idx: dict[Any, int],
+    item2idx: dict[Any, int],
+) -> pd.DataFrame:
+    """Aplica mapeamentos de usuários e itens aos dados de teste.
+
+    Args:
+        df: DataFrame com colunas de usuário e item originais.
+        user2idx: Mapeamento de usuário para índice.
+        item2idx: Mapeamento de item para índice.
+
+    Returns:
+        pd.DataFrame: DataFrame com colunas de índice numéricas.
+    """
     df = df.copy()
 
     df["user_idx"] = df["visitorid"].map(user2idx)
@@ -166,7 +194,8 @@ def apply_mappings(df, user2idx, item2idx):
     return df
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Executa o pipeline de preparação dos dados."""
     df = load_data()
 
     train, test = split_train_test(df)
@@ -180,3 +209,7 @@ if __name__ == "__main__":
     )
 
     train, test = load_train_test()
+
+
+if __name__ == "__main__":
+    main()

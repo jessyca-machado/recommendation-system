@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import joblib
 import mlflow
@@ -6,16 +7,19 @@ from mlflow import MlflowClient
 
 
 def register_model(
-    model,
+    model: Any,
     model_name: str,
     artifact_path: str = "model",
 ) -> int:
-    """
-    Salva o modelo como artefato do run atual e cria uma nova versão
-    no MLflow Model Registry.
+    """Registra um modelo no MLflow Model Registry.
+
+    Args:
+        model: Modelo treinado a ser serializado.
+        model_name: Nome do modelo registrado.
+        artifact_path: Caminho do artefato dentro do run.
 
     Returns:
-        int: Número da versão criada.
+        int: Número da versão criada no registry.
     """
 
     model_file = Path("/tmp/model.joblib")
@@ -50,9 +54,13 @@ def promote_model(
     model_name: str,
     version: int,
     alias: str = "production",
-):
-    """
-    Atribui um alias a uma versão registrada.
+) -> None:
+    """Atribui um alias a uma versão registrada do modelo.
+
+    Args:
+        model_name: Nome do modelo registrado.
+        version: Versão do modelo a promover.
+        alias: Alias a aplicar na versão.
     """
 
     client = MlflowClient()

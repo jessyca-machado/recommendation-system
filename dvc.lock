@@ -1,25 +1,111 @@
 schema: '2.0'
 stages:
   prepare:
-    cmd: python src/prepare.py
+    cmd: uv run prepare
     deps:
     - path: data/raw/events.csv
       hash: md5
       md5: fddaf7c1c6a9df23a726500a08ffdd7e
       size: 94237913
-    - path: src/prepare.py
+      isexec: true
+    - path: src/data/prepare.py
       hash: md5
-      md5: a3a6f5dee55b1c8c846b40611d2d55ad
-      size: 3335
+      md5: 9297d63c4d1495cce96f65fb75ac835a
+      size: 4055
     params:
-      params.yaml:
+      config/params.yaml:
         prepare.test_size: 0.2
     outs:
+    - path: data/processed/item_catalog.parquet
+      hash: md5
+      md5: a62d34196a26ca5e3d0f0b211e39aa02
+      size: 2448261
     - path: data/processed/test.parquet
       hash: md5
-      md5: 9786ff3f8b43e2324864e9c37d089490
-      size: 2752375
+      md5: 3ade1aa1e13259029ca3c6bae86b894a
+      size: 2312253
     - path: data/processed/train.parquet
       hash: md5
-      md5: 032e5375e853d930be4feb94b82d836a
-      size: 72703265
+      md5: 9d4abfc788ab90214f96b48298629283
+      size: 63089141
+  experiments:
+    cmd: uv run train
+    deps:
+    - path: data/processed/test.parquet
+      hash: md5
+      md5: 3ade1aa1e13259029ca3c6bae86b894a
+      size: 2312253
+    - path: data/processed/train.parquet
+      hash: md5
+      md5: 9d4abfc788ab90214f96b48298629283
+      size: 63089141
+    - path: src/experiments/
+      hash: md5
+      md5: 3282f3b21e4c1efa33f12d83f7c414fc.dir
+      size: 40055
+      nfiles: 13
+    - path: src/models
+      hash: md5
+      md5: 3555dbc72ca6e0dca7d1cc62a77a403a.dir
+      size: 54782
+      nfiles: 17
+    params:
+      config/params.yaml:
+        experiment:
+          random_seed: 42
+          top_k: 10
+          num_eval_negatives: 99
+        models:
+          popularity:
+            enabled: true
+          als:
+            enabled: true
+            factors: 64
+            iterations: 20
+            regularization: 0.01
+          bpr:
+            enabled: true
+            factors: 64
+            learning_rate: 0.01
+            regularization: 0.01
+            iterations: 50
+            random_state: 42
+          knn:
+            enabled: true
+            k_neighbors: 50
+            precompute_neighbors: true
+            max_user_history: 100
+          mlp:
+            enabled: true
+            emb_dim: 16
+            lr: 0.001
+            epochs: 25
+            batch_size: 2048
+            negative_ratio: 1
+            patience: 5
+            dropout: 0.2
+            seed: 42
+        weights:
+          view: 1
+          addtocart: 3
+          transaction: 5
+    outs:
+    - path: metrics/experiment_results.json
+      hash: md5
+      md5: 47c4e51304e315efcf543310dc0767db
+      size: 1165
+    - path: models/best_model.json
+      hash: md5
+      md5: 50ff293d64f6fe2d6036580a04f7c40e
+      size: 229
+  promote:
+    cmd: uv run promote
+    deps:
+    - path: models/best_model.json
+      hash: md5
+      md5: 50ff293d64f6fe2d6036580a04f7c40e
+      size: 229
+    - path: src/promote.py
+      hash: md5
+      md5: 889397a1c981a11a521bb74621723521
+      size: 916

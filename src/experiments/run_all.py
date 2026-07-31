@@ -14,13 +14,7 @@ from scipy.sparse import csr_matrix
 
 from src.config.params import load_params
 from src.config.settings import configure_runtime, settings
-from src.experiments.registry import (
-    promote_model,
-    register_model,
-)
-from src.experiments.runner import run_experiments
-from src.models.factory import build_models
-from src.prepare import (
+from src.data.prepare import (
     apply_mappings,
     build_mappings,
     load_data,
@@ -28,6 +22,12 @@ from src.prepare import (
     save_datasets,
     split_train_test,
 )
+from src.experiments.registry import (
+    promote_model,
+    register_model,
+)
+from src.experiments.runner import run_experiments
+from src.models.factory import build_models
 
 configure_runtime(settings)
 
@@ -49,7 +49,13 @@ logging.basicConfig(
 logger = logging.getLogger("experiments")
 
 
-def main():
+def main() -> None:
+    """Executa o pipeline completo de experimentos e registro do melhor modelo.
+
+    Returns:
+        None: O pipeline salva métricas, artefatos e promove o modelo.
+    """
+
     params = load_params()
 
     models = build_models(params["models"])

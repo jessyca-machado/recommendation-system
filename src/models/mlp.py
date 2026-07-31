@@ -15,15 +15,20 @@ logger = logging.getLogger("runner")
 
 
 class InteractionDataset(Dataset):
-    def __init__(self, interactions: pd.DataFrame):
+    """Dataset para treinar um MLP de recomendação."""
+
+    def __init__(self, interactions: pd.DataFrame) -> None:
         self.users = interactions["user_idx"].values
         self.items = interactions["item_idx"].values
         self.labels = interactions["label"].values.astype(np.float32)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.users)
 
-    def __getitem__(self, idx):
+    def __getitem__(
+        self,
+        idx: int,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         return (
             torch.tensor(self.users[idx], dtype=torch.long),
             torch.tensor(self.items[idx], dtype=torch.long),
@@ -32,13 +37,15 @@ class InteractionDataset(Dataset):
 
 
 class MLP(nn.Module):
+    """MLP para prever scores de interação usuário-item."""
+
     def __init__(
         self,
         n_users: int,
         n_items: int,
         emb_dim: int = 64,
         dropout: float = 0.2,
-    ):
+    ) -> None:
         super().__init__()
 
         self.user_emb = nn.Embedding(n_users, emb_dim)
@@ -65,6 +72,8 @@ class MLP(nn.Module):
 
 
 class MLPRecommender(RecommenderBase):
+    """Modelo MLP treinado com amostragem negativa para recomendação."""
+
     def __init__(
         self,
         emb_dim: int = 16,
@@ -76,7 +85,7 @@ class MLPRecommender(RecommenderBase):
         dropout: float = 0.2,
         seed: int = 42,
         device: str | None = None,
-    ):
+    ) -> None:
         self.emb_dim = emb_dim
         self.lr = lr
         self.epochs = epochs
@@ -94,7 +103,15 @@ class MLPRecommender(RecommenderBase):
     def fit(
         self,
         train_matrix: csr_matrix,
-    ):
+    ) -> "MLPRecommender":
+        """Treina o MLP com uma matriz esparsa de interações.
+
+        Args:
+            train_matrix: Matriz esparsa de treino.
+
+        Returns:
+            MLPRecommender: Instância treinada do modelo.
+        """
         self.train_matrix = train_matrix
 
         users, items = train_matrix.nonzero()
@@ -173,6 +190,16 @@ class MLPRecommender(RecommenderBase):
         criterion: nn.Module,
         optimizer: optim.Optimizer,
     ) -> float:
+        """Executa uma época de treinamento do modelo.
+
+        Args:
+            loader: Carregador de batches do dataset.
+            criterion: Função de perda.
+            optimizer: Otimizador do modelo.
+
+        Returns:
+            float: Perda média da época.
+        """
         self.model.train()
 
         total_loss = 0.0
@@ -207,6 +234,15 @@ class MLPRecommender(RecommenderBase):
         loader: DataLoader,
         criterion: nn.Module,
     ) -> float:
+        """Calcula a perda média em um conjunto de dados.
+
+        Args:
+            loader: Carregador de batches do dataset.
+            criterion: Função de perda.
+
+        Returns:
+            float: Perda média calculada.
+        """
         self.model.eval()
 
         total_loss = 0.0
@@ -235,6 +271,14 @@ class MLPRecommender(RecommenderBase):
         self,
         interactions: pd.DataFrame,
     ) -> pd.DataFrame:
+        """Cria o dataset de treino com positivos e negativos.
+
+        Args:
+            interactions: DataFrame com interações positivas.
+
+        Returns:
+            pd.DataFrame: DataFrame com labels para treino.
+        """
         positives = interactions[["user_idx", "item_idx"]].copy()
 
         positives["label"] = 1.0
@@ -250,6 +294,14 @@ class MLPRecommender(RecommenderBase):
         self,
         positives: pd.DataFrame,
     ) -> pd.DataFrame:
+        """Amostra itens negativos para cada usuário.
+
+        Args:
+            positives: DataFrame com os itens positivos.
+
+        Returns:
+            pd.DataFrame: DataFrame com exemplos negativos e label 0.
+        """
         rows = []
 
         for user_id in positives["user_idx"]:
@@ -294,6 +346,15 @@ class MLPRecommender(RecommenderBase):
         user_ids: pd.Series,
         item_ids: pd.Series,
     ) -> pd.Series:
+        """Calcula scores de interação para pares usuário-item.
+
+        Args:
+            user_ids: Série com identificadores de usuários.
+            item_ids: Série com identificadores de itens.
+
+        Returns:
+            pd.Series: Scores de probabilidade para cada par.
+        """
         self.model.eval()
 
         users = torch.tensor(
@@ -320,8 +381,20 @@ class MLPRecommender(RecommenderBase):
         )
 
     def recommend(self, candidates: pd.DataFrame, k: int = 10) -> pd.DataFrame:
+        """Gera recomendações para os candidatos usando o MLP.
+
+        Args:
+            candidates: DataFrame com colunas user_idx e item_idx.
+            k: Quantidade máxima de itens recomendados por usuário.
+
+        Returns:
+            pd.DataFrame: Ranking com colunas user_idx, item_idx, rank e score.
+        """
         scored = candidates.copy()
         scored["score"] = self.predict(scored["user_idx"], scored["item_idx"])
-        scored = scored.sort_values(["user_idx", "score"], ascending=[True, False])
+        scored = scored.sort_values(
+            ["user_idx", "score"],
+            ascending=[True, False],
+        )
         scored["rank"] = scored.groupby("user_idx").cumcount() + 1
         return scored[scored["rank"] <= k][["user_idx", "item_idx", "rank", "score"]]
